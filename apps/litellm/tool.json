@@ -1,0 +1,85 @@
+{
+  "name": "LiteLLM Proxy (Self-Hosted)",
+  "description": "Deploy LiteLLM, the OpenAI-compatible gateway to 100+ model providers with virtual keys, budgets and spend tracking. Runs the official image on ECS Fargate behind a load balancer, with a managed RDS PostgreSQL database and optional Amazon Bedrock access (~$105/mo plus model usage).",
+  "cdkEntryPoint": "bin/litellm.ts",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "cpu": {
+        "type": "number",
+        "title": "Task CPU",
+        "description": "Fargate CPU units for the LiteLLM task (1024 = 1 vCPU).",
+        "enum": [512, 1024, 2048],
+        "default": 1024
+      },
+      "memoryMiB": {
+        "type": "number",
+        "title": "Task Memory (MiB)",
+        "description": "Fargate memory for the LiteLLM task. Must suit the CPU: 512 → 1024–4096, 1024 → 2048–8192, 2048 → 4096–8192.",
+        "enum": [1024, 2048, 4096, 8192],
+        "default": 2048
+      },
+      "desiredCount": {
+        "type": "number",
+        "title": "Tasks",
+        "description": "Number of LiteLLM tasks behind the load balancer.",
+        "minimum": 1,
+        "maximum": 4,
+        "default": 1
+      },
+      "dbInstanceType": {
+        "type": "string",
+        "title": "RDS Instance Type",
+        "description": "PostgreSQL database instance type.",
+        "enum": ["db.t4g.micro", "db.t4g.small", "db.t4g.medium"],
+        "default": "db.t4g.micro"
+      },
+      "dbMultiAz": {
+        "type": "boolean",
+        "title": "RDS Multi-AZ",
+        "description": "Keep a standby database in a second availability zone. Doubles the database cost.",
+        "default": false
+      },
+      "bedrockAccess": {
+        "type": "boolean",
+        "title": "Amazon Bedrock Access",
+        "description": "Let the proxy invoke Amazon Bedrock models in this account with its own role, so Bedrock models can be added without an access key. Invocation is billed to this account.",
+        "default": false
+      },
+      "domainName": {
+        "type": "string",
+        "title": "Custom Domain",
+        "description": "Optional custom domain (e.g., llm.example.com). Served over HTTPS with an ACM certificate. Strongly recommended: without it, API keys travel over plain HTTP."
+      },
+      "hostedZoneId": {
+        "type": "string",
+        "title": "Route 53 Hosted Zone ID",
+        "description": "Hosted zone for the certificate validation and DNS records.",
+        "x-showWhen": {
+          "domainName": "*"
+        }
+      },
+      "destroyDataOnDelete": {
+        "type": "boolean",
+        "title": "Delete Data With the Stack",
+        "description": "Delete the database and the salt key when the stack is deleted instead of keeping a final snapshot. Leave off unless the data is disposable.",
+        "default": false
+      }
+    }
+  },
+  "visibility": "PUBLIC",
+  "category": "AI & Machine Learning",
+  "tags": ["litellm", "llm", "ai-gateway", "openai-compatible", "bedrock", "self-hosted"],
+  "estimatedCost": {
+    "monthly": 105,
+    "description": "~$105/mo before model usage: Fargate task (1 vCPU, 2 GB) ~$36, NAT gateway ~$33, load balancer ~$20, RDS db.t4g.micro + 20 GB ~$14, Secrets Manager + logs ~$2. Model calls (Bedrock or any other provider) are billed separately by the provider."
+  },
+  "estimatedDuration": "15-25 minutes",
+  "slug": "litellm",
+  "logoUrl": "/images/apps/litellm.png",
+  "defaultParams": {
+    "cpu": 1024,
+    "memoryMiB": 2048,
+    "dbInstanceType": "db.t4g.micro"
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "name": "Flagsmith (Self-Hosted)",
+  "description": "Deploy Flagsmith, the open-source feature flag and remote config service. Runs the official image on ECS Fargate behind a load balancer — API and dashboard, plus a task processor — with a managed RDS PostgreSQL database (~$110/mo).",
+  "cdkEntryPoint": "bin/flagsmith.ts",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "cpu": {
+        "type": "number",
+        "title": "Task CPU",
+        "description": "Fargate CPU units for the Flagsmith API task (256 = 0.25 vCPU).",
+        "enum": [256, 512, 1024, 2048],
+        "default": 512
+      },
+      "memoryMiB": {
+        "type": "number",
+        "title": "Task Memory (MiB)",
+        "description": "Fargate memory for the Flagsmith API task. Must suit the CPU: 256 → 512–2048, 512 → 1024–4096, 1024 → 2048–4096, 2048 → 4096.",
+        "enum": [512, 1024, 2048, 4096],
+        "default": 2048
+      },
+      "desiredCount": {
+        "type": "number",
+        "title": "Tasks",
+        "description": "Number of Flagsmith API tasks behind the load balancer.",
+        "minimum": 1,
+        "maximum": 4,
+        "default": 1
+      },
+      "dbInstanceType": {
+        "type": "string",
+        "title": "RDS Instance Type",
+        "description": "PostgreSQL database instance type.",
+        "enum": ["db.t4g.micro", "db.t4g.small", "db.t4g.medium"],
+        "default": "db.t4g.micro"
+      },
+      "dbMultiAz": {
+        "type": "boolean",
+        "title": "RDS Multi-AZ",
+        "description": "Keep a standby database in a second availability zone. Doubles the database cost.",
+        "default": false
+      },
+      "domainName": {
+        "type": "string",
+        "title": "Custom Domain",
+        "description": "Optional custom domain (e.g., flags.example.com). Served over HTTPS with an ACM certificate."
+      },
+      "hostedZoneId": {
+        "type": "string",
+        "title": "Route 53 Hosted Zone ID",
+        "description": "Hosted zone for the certificate validation and DNS records.",
+        "x-showWhen": {
+          "domainName": "*"
+        }
+      },
+      "inviteOnly": {
+        "type": "boolean",
+        "title": "Invite-only Sign-up",
+        "description": "Accept sign-ups only from people with an invite. Leave off for the first deploy — signing up is how you create the first account — then turn it on.",
+        "default": false
+      },
+      "destroyDataOnDelete": {
+        "type": "boolean",
+        "title": "Delete Data With the Stack",
+        "description": "Delete the database when the stack is deleted instead of keeping a final snapshot. Leave off unless the data is disposable.",
+        "default": false
+      }
+    }
+  },
+  "visibility": "PUBLIC",
+  "category": "Developer Tools",
+  "tags": ["flagsmith", "feature-flags", "remote-config", "ab-testing", "self-hosted"],
+  "estimatedCost": {
+    "monthly": 110,
+    "description": "~$110/mo: NAT gateway ~$33, load balancer ~$20, API task ~$21, task processor ~$11, RDS db.t4g.micro ~$14, public IPv4 addresses ~$11"
+  },
+  "estimatedDuration": "20-30 minutes",
+  "slug": "flagsmith",
+  "logoUrl": "/images/apps/flagsmith.svg",
+  "defaultParams": {
+    "cpu": 512,
+    "memoryMiB": 2048,
+    "dbInstanceType": "db.t4g.micro"
+  }
+}

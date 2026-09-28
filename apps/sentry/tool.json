@@ -1,0 +1,142 @@
+{
+  "name": "Sentry (Self-Hosted)",
+  "description": "Deploy self-hosted Sentry error tracking. Choose Starter (EC2 docker-compose, ~$45/mo) for dev/small teams or Optimized (Fargate + RDS + ElastiCache, ~$150-300/mo) for production workloads.",
+  "cdkEntryPoint": "bin/sentry.ts",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "tier": {
+        "type": "string",
+        "title": "Deployment Tier",
+        "description": "Starter: single EC2 with Docker Compose (~$45/mo). Optimized: ECS Fargate + managed RDS/Redis (~$150-300/mo).",
+        "enum": ["starter", "optimized"],
+        "default": "starter"
+      },
+      "sentryProfile": {
+        "type": "string",
+        "title": "Sentry Profile",
+        "description": "errors-only runs ~15 containers (lighter). full runs all ~74 services.",
+        "enum": ["errors-only", "full"],
+        "default": "errors-only"
+      },
+      "instanceType": {
+        "type": "string",
+        "title": "Instance Type",
+        "description": "EC2 instance type. Minimum t3.xlarge (4 CPU, 16 GB RAM) required.",
+        "enum": ["t3.xlarge", "m6i.xlarge", "m6i.2xlarge"],
+        "default": "t3.xlarge",
+        "x-showWhen": { "tier": "starter" }
+      },
+      "volumeSizeGb": {
+        "type": "number",
+        "title": "EBS Volume Size (GB)",
+        "description": "Root volume size in GB. 100 GB recommended for production use.",
+        "minimum": 50,
+        "maximum": 500,
+        "default": 100,
+        "x-showWhen": { "tier": "starter" }
+      },
+      "sentryEventRetentionDays": {
+        "type": "number",
+        "title": "Event Retention (Days)",
+        "description": "How long to retain Sentry events. Longer retention requires more disk space.",
+        "minimum": 7,
+        "maximum": 90,
+        "default": 30,
+        "x-showWhen": { "tier": "starter" }
+      },
+      "sshKeyName": {
+        "type": "string",
+        "title": "SSH Key Pair Name",
+        "description": "Optional EC2 key pair for SSH access. Leave empty to use SSM Session Manager.",
+        "x-showWhen": { "tier": "starter" }
+      },
+      "webCpu": {
+        "type": "number",
+        "title": "Web Service CPU",
+        "description": "Fargate CPU units for the Sentry web service (256 = 0.25 vCPU).",
+        "enum": [256, 512, 1024, 2048],
+        "default": 512,
+        "x-showWhen": { "tier": "optimized" }
+      },
+      "webMemory": {
+        "type": "number",
+        "title": "Web Service Memory (MiB)",
+        "description": "Fargate memory for the Sentry web service.",
+        "enum": [512, 1024, 2048, 4096],
+        "default": 1024,
+        "x-showWhen": { "tier": "optimized" }
+      },
+      "dbInstanceType": {
+        "type": "string",
+        "title": "RDS Instance Type",
+        "description": "Postgres database instance type.",
+        "enum": ["db.t3.micro", "db.t3.small", "db.t3.medium", "db.t3.large"],
+        "default": "db.t3.medium",
+        "x-showWhen": { "tier": "optimized" }
+      },
+      "dbMultiAz": {
+        "type": "boolean",
+        "title": "RDS Multi-AZ",
+        "description": "Enable Multi-AZ deployment for high availability. Doubles RDS cost.",
+        "default": false,
+        "x-showWhen": { "tier": "optimized" }
+      },
+      "cacheNodeType": {
+        "type": "string",
+        "title": "Redis Cache Node Type",
+        "description": "ElastiCache Redis node type.",
+        "enum": ["cache.t3.micro", "cache.t3.small", "cache.t3.medium"],
+        "default": "cache.t3.micro",
+        "x-showWhen": { "tier": "optimized" }
+      },
+      "vpcMode": {
+        "type": "string",
+        "title": "VPC Mode",
+        "description": "Create a new VPC or use an existing one.",
+        "enum": ["new", "existing"],
+        "default": "new"
+      },
+      "vpcId": {
+        "type": "string",
+        "title": "Existing VPC ID",
+        "description": "VPC ID to deploy into (e.g., vpc-0abc123def456).",
+        "x-showWhen": { "vpcMode": "existing" }
+      },
+      "subnetType": {
+        "type": "string",
+        "title": "Subnet Type",
+        "description": "Public: accessible from internet. Private: VPC-only access (Optimized tier defaults to private).",
+        "enum": ["public", "private"],
+        "default": "public"
+      },
+      "domainName": {
+        "type": "string",
+        "title": "Custom Domain",
+        "description": "Optional custom domain (e.g., sentry.example.com). Starter: HTTPS via Caddy/Let's Encrypt. Optimized: HTTPS via ACM certificate."
+      },
+      "hostedZoneId": {
+        "type": "string",
+        "title": "Route 53 Hosted Zone ID",
+        "description": "Hosted zone for DNS record creation.",
+        "x-showWhen": { "domainName": "*" }
+      }
+    },
+    "required": ["tier", "sentryProfile"]
+  },
+  "visibility": "PUBLIC",
+  "category": "Monitoring",
+  "tags": ["sentry", "error-tracking", "monitoring", "observability", "self-hosted"],
+  "estimatedCost": {
+    "monthly": 45,
+    "description": "Starter ~$45/mo · Optimized ~$150-300/mo"
+  },
+  "estimatedDuration": "20-40 minutes",
+  "slug": "sentry",
+  "logoUrl": "/images/apps/sentry.svg",
+  "tiers": ["STARTER", "OPTIMIZED"],
+  "defaultParams": {
+    "tier": "starter",
+    "sentryProfile": "errors-only"
+  }
+}

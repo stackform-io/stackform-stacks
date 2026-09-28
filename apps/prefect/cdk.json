@@ -1,0 +1,6 @@
+{
+  "app": "npx ts-node bin/prefect.ts",
+  "context": {
+    "toolConfig": {}
+  }
+}

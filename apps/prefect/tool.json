@@ -1,0 +1,79 @@
+{
+  "name": "Prefect (Self-Hosted)",
+  "description": "Deploy Prefect, the open-source workflow orchestration server for Python data pipelines. Runs the official image on ECS Fargate as a web tier and a background-services task, with RDS PostgreSQL and ElastiCache Redis, behind a password-protected load balancer (~$117/mo).",
+  "cdkEntryPoint": "bin/prefect.ts",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "cpu": {
+        "type": "number",
+        "title": "Task CPU",
+        "description": "Fargate CPU units for each Prefect task — the web tier and the background services (256 = 0.25 vCPU).",
+        "enum": [256, 512, 1024, 2048],
+        "default": 512
+      },
+      "memoryMiB": {
+        "type": "number",
+        "title": "Task Memory (MiB)",
+        "description": "Fargate memory for each Prefect task. Must suit the CPU: 256 → 512–2048, 512 → 1024–4096, 1024 → 2048–4096, 2048 → 4096.",
+        "enum": [512, 1024, 2048, 4096],
+        "default": 1024
+      },
+      "desiredCount": {
+        "type": "number",
+        "title": "Web Tasks",
+        "description": "Number of Prefect web (API + UI) tasks behind the load balancer. The background services always run as one task.",
+        "minimum": 1,
+        "maximum": 4,
+        "default": 1
+      },
+      "dbInstanceType": {
+        "type": "string",
+        "title": "RDS Instance Type",
+        "description": "PostgreSQL database instance type.",
+        "enum": ["db.t4g.micro", "db.t4g.small", "db.t4g.medium"],
+        "default": "db.t4g.micro"
+      },
+      "dbMultiAz": {
+        "type": "boolean",
+        "title": "RDS Multi-AZ",
+        "description": "Keep a standby database in a second availability zone. Doubles the database cost.",
+        "default": false
+      },
+      "domainName": {
+        "type": "string",
+        "title": "Custom Domain",
+        "description": "Optional custom domain (e.g., prefect.example.com). Served over HTTPS with an ACM certificate."
+      },
+      "hostedZoneId": {
+        "type": "string",
+        "title": "Route 53 Hosted Zone ID",
+        "description": "Hosted zone for the certificate validation and DNS records.",
+        "x-showWhen": {
+          "domainName": "*"
+        }
+      },
+      "destroyDataOnDelete": {
+        "type": "boolean",
+        "title": "Delete Data With the Stack",
+        "description": "Delete the database when the stack is deleted instead of keeping a final snapshot. Leave off unless the flow run history is disposable.",
+        "default": false
+      }
+    }
+  },
+  "visibility": "PUBLIC",
+  "category": "Data Engineering",
+  "tags": ["prefect", "workflow-orchestration", "data-pipelines", "python", "self-hosted"],
+  "estimatedCost": {
+    "monthly": 117,
+    "description": "~$117/mo: 2 Fargate tasks (web + background services) ~$36, NAT gateway ~$33, load balancer ~$20, RDS db.t4g.micro ~$14, ElastiCache cache.t4g.micro ~$12, Secrets Manager + logs ~$2"
+  },
+  "estimatedDuration": "15-25 minutes",
+  "slug": "prefect",
+  "logoUrl": "/images/apps/prefect.svg",
+  "defaultParams": {
+    "cpu": 512,
+    "memoryMiB": 1024,
+    "dbInstanceType": "db.t4g.micro"
+  }
+}

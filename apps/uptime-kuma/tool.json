@@ -1,0 +1,71 @@
+{
+  "name": "Uptime Kuma (Self-Hosted)",
+  "description": "Deploy Uptime Kuma, the self-hosted uptime monitor with status pages and 90+ notification channels. Runs the official image as a single ECS Fargate task behind a load balancer, with a managed RDS MariaDB database (~$97/mo).",
+  "cdkEntryPoint": "bin/uptime-kuma.ts",
+  "configSchema": {
+    "type": "object",
+    "properties": {
+      "cpu": {
+        "type": "number",
+        "title": "Task CPU",
+        "description": "Fargate CPU units for the Uptime Kuma task (256 = 0.25 vCPU). Raise it for hundreds of monitors.",
+        "enum": [256, 512, 1024, 2048],
+        "default": 512
+      },
+      "memoryMiB": {
+        "type": "number",
+        "title": "Task Memory (MiB)",
+        "description": "Fargate memory for the Uptime Kuma task. Must suit the CPU: 256 → 512–2048, 512 → 1024–4096, 1024 → 2048–4096, 2048 → 4096.",
+        "enum": [512, 1024, 2048, 4096],
+        "default": 1024
+      },
+      "dbInstanceType": {
+        "type": "string",
+        "title": "RDS Instance Type",
+        "description": "MariaDB database instance type.",
+        "enum": ["db.t4g.micro", "db.t4g.small", "db.t4g.medium"],
+        "default": "db.t4g.micro"
+      },
+      "dbMultiAz": {
+        "type": "boolean",
+        "title": "RDS Multi-AZ",
+        "description": "Keep a standby database in a second availability zone. Doubles the database cost.",
+        "default": false
+      },
+      "domainName": {
+        "type": "string",
+        "title": "Custom Domain",
+        "description": "Optional custom domain (e.g., status.example.com). Served over HTTPS with an ACM certificate."
+      },
+      "hostedZoneId": {
+        "type": "string",
+        "title": "Route 53 Hosted Zone ID",
+        "description": "Hosted zone for the certificate validation and DNS records.",
+        "x-showWhen": {
+          "domainName": "*"
+        }
+      },
+      "destroyDataOnDelete": {
+        "type": "boolean",
+        "title": "Delete Data With the Stack",
+        "description": "Delete the database when the stack is deleted instead of keeping a final snapshot. Leave off unless the data is disposable.",
+        "default": false
+      }
+    }
+  },
+  "visibility": "PUBLIC",
+  "category": "Monitoring",
+  "tags": ["uptime-kuma", "monitoring", "uptime", "status-page", "self-hosted"],
+  "estimatedCost": {
+    "monthly": 97,
+    "description": "~$97/mo: NAT gateway ~$33, load balancer ~$20, Fargate task ~$18, RDS db.t4g.micro ~$14, public IPv4 addresses ~$11, Secrets Manager and logs ~$1"
+  },
+  "estimatedDuration": "15-25 minutes",
+  "slug": "uptime-kuma",
+  "logoUrl": "/images/apps/uptime-kuma.svg",
+  "defaultParams": {
+    "cpu": 512,
+    "memoryMiB": 1024,
+    "dbInstanceType": "db.t4g.micro"
+  }
+}

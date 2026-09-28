@@ -1,0 +1,6 @@
+{
+  "app": "npx ts-node bin/uptime-kuma.ts",
+  "context": {
+    "toolConfig": {}
+  }
+}

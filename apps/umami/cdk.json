@@ -1,0 +1,6 @@
+{
+  "app": "npx ts-node bin/umami.ts",
+  "context": {
+    "toolConfig": {}
+  }
+}
