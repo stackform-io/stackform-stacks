@@ -183,20 +183,29 @@ so the stack silently synthesises its defaults.
 
 ## Checks
 
-Every PR runs these checks, and **Pre-flight Gate** must pass before merging:
+Every PR runs these checks, and **Pre-flight Gate**, which requires all of
+them, must pass before merging. The scripts run on Node 22.18 or later, which
+runs TypeScript directly:
 
-- **Catalogue conventions** (`node scripts/check-catalogue.mjs`): each app has
+- **Lint** (`npm ci && npm run lint`): the repository is TypeScript only, and
+  no JavaScript file may be committed. [Biome](https://biomejs.dev) lints and
+  formats the TypeScript and JSON (`npm run lint:fix` applies its fixes), `tsc`
+  type-checks `scripts/` and `gate/` in strict mode, and
+  [actionlint](https://github.com/rhysd/actionlint) checks the workflows.
+- **Catalogue conventions** (`node scripts/check-catalogue.ts`): each app has
   the required files, a valid `tool.json`, and a row in the stacks table.
-- **Pre-flight** (`node scripts/preflight.mjs apps/<slug>`): the app
+- **Pre-flight** (`node scripts/preflight.ts apps/<slug>`): the app
   type-checks, and every variant in its `preflight.json` synthesises and passes
   the [SF-441](https://app.clickup.com/t/86cbaxm8e) pre-flight gate. The
   default settings always run as one variant. The gate checks for an `AppUrl`
   output, no public databases or tasks, encryption, no plaintext secrets, and
-  IAM wildcards. The gate itself lives in `stackform-cdk`; to run it locally,
-  check that repository out next to this one, or point `STACKFORM_CDK_DIR` at
-  it.
+  IAM wildcards. The gate lives in [`gate/`](gate).
 - **ClickUp task ID** (maintainers' PRs only): the title contains an `SF-<id>`
   that exists.
+
+CI runs the base branch's copy of `scripts/` and `gate/` against the PR's apps,
+so a PR is always graded by the checks it targets. Changing the checks
+themselves needs a maintainer's review.
 
 `preflight.json` lists the deploy-form choices that change the template, by
 name:

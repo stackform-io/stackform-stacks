@@ -1,0 +1,20 @@
+{
+  "description": "Tooling for the stackform-stacks repository. Each app under apps/ has its own package.json.",
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "@types/node": "^22.20.4",
+    "typescript": "7.0.2"
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "name": "stackform-stacks",
+  "private": true,
+  "scripts": {
+    "catalogue": "node scripts/check-catalogue.ts",
+    "lint": "biome check && tsc -p .",
+    "lint:fix": "biome check --write",
+    "preflight": "node scripts/preflight.ts"
+  },
+  "type": "module"
+}

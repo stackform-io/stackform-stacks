@@ -25,9 +25,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+
       - name: Validate PR title has ClickUp task ID
         env:
           CLICKUP_API_TOKEN: ${{ secrets.CLICKUP_API_TOKEN }}
           CLICKUP_TEAM_ID: ${{ vars.CLICKUP_TEAM_ID }}
           PR_TITLE: ${{ github.event.pull_request.title }}
-        run: ./scripts/validate-pr-clickup.sh "$PR_TITLE"
+        run: node scripts/validate-pr-clickup.ts "$PR_TITLE"

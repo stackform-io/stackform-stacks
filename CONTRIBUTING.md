@@ -8,7 +8,7 @@ request and what a stack must meet before it is merged.
 ```mermaid
 flowchart TD
     start(["Branch from develop<br/>feat/#lt;slug#gt;-... or fix/#lt;slug#gt;-..."])
-    local["Run locally:<br/>check-catalogue.mjs + preflight.mjs"]
+    local["Run locally:<br/>check-catalogue.ts + preflight.ts"]
     pr["Open PR to develop<br/>using the PR template"]
     checks{"CI checks on every push<br/>ClickUp task ID (maintainers only)<br/>Catalogue conventions<br/>Pre-flight gate, every variant"}
     fix["Fix the stack<br/>(never loosen the gate)"]
@@ -29,9 +29,9 @@ maintainers take the stack to production and to the project's own repository
 
 ## Branches
 
-| Branch    | Purpose                                                              |
-| --------- | -------------------------------------------------------------------- |
-| `develop` | Integration branch, deployed to `dev.stackform.io`. **All PRs target `develop`.** |
+| Branch    | Purpose                                                                                                                                                           |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `develop` | Integration branch, deployed to `dev.stackform.io`. **All PRs target `develop`.**                                                                                 |
 | `main`    | Released stacks, deployed to `app.stackform.io`. Only maintainers merge into it, from `develop`. See [From `develop` to production](#from-develop-to-production). |
 
 Name your branch after the change and the stack it touches:
@@ -60,7 +60,9 @@ chore/<short-description>           # repo-wide tooling or docs
 4. **Pass the checks.** The **Pre-flight Gate** check must be green. It
    synthesises every variant in the app's `preflight.json` and grades the
    templates with the platform's pre-flight gate (see [Checks](README.md#checks)).
-   Fix the stack; don't loosen the gate.
+   Fix the stack; don't loosen the gate. The checks run from the base
+   branch, so editing `gate/` or `scripts/` in the same PR does not change how
+   it is graded.
 5. **Show that it deploys.** For anything that changes resources, include
    proof of a real deploy: stack outputs, a screenshot of the running app.
 6. **Call out anything destructive.** When a change replaces a database,
@@ -121,10 +123,10 @@ a second one to that project.
 `version` in the app's `package.json` is the version Stackform publishes.
 Bump it with `npm version` from inside the app directory:
 
-| Change                                                        | Bump    |
-| ------------------------------------------------------------- | ------- |
-| Fix with no change to the form or resources                   | `patch` |
-| New optional form field, new feature, upstream image bump     | `minor` |
+| Change                                                                                            | Bump    |
+| ------------------------------------------------------------------------------------------------- | ------- |
+| Fix with no change to the form or resources                                                       | `patch` |
+| New optional form field, new feature, upstream image bump                                         | `minor` |
 | Renamed or removed field, replaced stateful resource, new default that changes an existing deploy | `major` |
 
 ## Accepting a new project
@@ -175,7 +177,7 @@ particular:
 - A variant for every deploy-form choice that changes the resources or IAM,
   such as a custom domain, a tier or an opt-in integration. See
   [Checks](README.md#checks).
-- `node scripts/preflight.mjs apps/<slug>` passes locally.
+- `node scripts/preflight.ts apps/<slug>` and `npm run lint` pass locally.
 
 ### Architecture and security
 

@@ -1,4 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="280" height="56" viewBox="0 0 200 40">
+<svg xmlns="http://www.w3.org/2000/svg" width="264" height="56" viewBox="0 0 188 40">
+  <title>Deploy to Stackform</title>
   <defs>
     <linearGradient id="bg-gradient-lg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#1e293b"/>
@@ -6,17 +7,15 @@
     </linearGradient>
   </defs>
   <!-- Background -->
-  <rect width="200" height="40" rx="6" fill="url(#bg-gradient-lg)"/>
+  <rect width="188" height="40" rx="6" fill="url(#bg-gradient-lg)"/>
   <!-- Border highlight -->
-  <rect x="0.5" y="0.5" width="199" height="39" rx="5.5" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
-  <!-- Rocket icon -->
-  <g transform="translate(16, 10)">
-    <path d="M12 2L8 6H4L2 12L8 10V14L10 16L12 14L14 16L16 14V10L22 12L20 6H16L12 2Z" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M5 17L3 19" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M9 17L7 21" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M15 17L17 21" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round"/>
-    <path d="M19 17L21 19" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round"/>
+  <rect x="0.5" y="0.5" width="187" height="39" rx="5.5" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+  <!-- Stackform logo -->
+  <g transform="translate(12.13, 7) scale(0.8125)">
+    <path d="M28.2344 13.2178L28.2334 13.2188V16.0001L18.5557 21.5645V22.5323L28.2334 17.0889V24.2256L16.3779 31.0001L4.76562 24.2256V21.2012L16.3779 27.9756L25.5723 22.8956V21.6339L16.3779 26.8868L4.76562 20.1133V13.2178L16.3779 19.5079L28.2334 13.2178L28.2285 13.2139L28.2344 13.2178Z" fill="#f8fafc"/>
+    <path d="M9.18089 8.75055L6.45915 10.3836L16.3784 15.4642L26.6605 10.3836L23.6363 8.98374L24.3621 8.49987L28.233 10.1417V12.0771L16.3784 18.1829L4.76562 12.0771V10.1258L8.39461 8.37891L9.18089 8.75055Z" fill="#cbd5e1"/>
+    <path d="M28.2334 6.56439V8.49994L16.3779 14.6054L4.76562 8.49994V6.54877L16.3779 0.999939L28.2334 6.56439ZM6.94336 6.7431L16.3779 11.4609L25.9346 6.7431L16.3779 2.26654L6.94336 6.7431Z" fill="#94a3b8"/>
   </g>
   <!-- Text -->
-  <text x="105" y="25" text-anchor="middle" fill="white" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif" font-size="13" font-weight="500">Deploy to Stackform</text>
+  <text x="110" y="25" text-anchor="middle" fill="white" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif" font-size="13" font-weight="500">Deploy to Stackform</text>
 </svg>

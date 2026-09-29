@@ -1,6 +1,6 @@
-import { Aspects, IAspect, Tags } from "aws-cdk-lib";
+import { Aspects, type IAspect, Tags } from "aws-cdk-lib";
 import { CfnFunction } from "aws-cdk-lib/aws-lambda";
-import { IConstruct } from "constructs";
+import type { IConstruct } from "constructs";
 
 /**
  * AWS Partner Revenue Measurement (PRM) attribution.

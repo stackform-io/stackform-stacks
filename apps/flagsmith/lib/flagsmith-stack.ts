@@ -10,7 +10,7 @@ import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import * as cr from "aws-cdk-lib/custom-resources";
-import { Construct } from "constructs";
+import type { Construct } from "constructs";
 
 /**
  * Pinned upstream release. Bump deliberately: the migration task runs the new release's

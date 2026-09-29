@@ -7,7 +7,7 @@ import * as logs from "aws-cdk-lib/aws-logs";
 import * as rds from "aws-cdk-lib/aws-rds";
 import * as route53 from "aws-cdk-lib/aws-route53";
 import * as route53Targets from "aws-cdk-lib/aws-route53-targets";
-import { Construct } from "constructs";
+import type { Construct } from "constructs";
 
 /**
  * Pinned upstream release. Bump deliberately: the container migrates the database on

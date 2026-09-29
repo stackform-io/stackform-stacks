@@ -32,7 +32,7 @@ downtime? Write "None" if nothing changes.
 
 - [ ] `version` in `package.json` bumped with `npm version` (see [Versioning](../CONTRIBUTING.md#versioning))
 - [ ] `preflight.json` has a variant for any new option that changes resources or IAM
-- [ ] `node scripts/preflight.mjs apps/<slug>` passes locally
+- [ ] `node scripts/preflight.ts apps/<slug>` and `npm run lint` pass locally
 - [ ] `tool.json` updated if form fields, cost or duration changed
 - [ ] Entry point validates any new `toolConfig` value
 - [ ] App `README.md` updated (configuration table, cost, upgrade notes)
