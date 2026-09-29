@@ -200,6 +200,9 @@ runs TypeScript directly:
   default settings always run as one variant. The gate checks for an `AppUrl`
   output, no public databases or tasks, encryption, no plaintext secrets, and
   IAM wildcards. The gate lives in [`gate/`](gate).
+  A PR into `develop` grades only the apps it changes, or every app when it
+  changes the gate, the scripts, the workflows or the root tooling. A PR into
+  `main` grades every app.
 - **ClickUp task ID** (maintainers' PRs only): the title contains an `SF-<id>`
   that exists.
 
