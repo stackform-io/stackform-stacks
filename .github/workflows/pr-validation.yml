@@ -48,15 +48,17 @@ jobs:
           path: .base
           sparse-checkout: scripts
 
-      # Only while a base branch predates these checks (the PR that adds them, and the
-      # first promotion to main). A PR cannot remove them from its base, so once they
-      # land this never runs again.
-      - name: Fall back to the PR's checks if the base branch has none
+      # A PR that adds a check runs it before it lands; files the base branch already has
+      # are never replaced, so a PR cannot change a check that exists. Only new files come
+      # from the PR, and the workflow that runs them needs a code owner's review.
+      - name: Add checks the base branch does not have yet
         run: |
-          if [ ! -f .base/scripts/check-catalogue.ts ]; then
-            echo "::warning::The base branch has no scripts/check-catalogue.ts; using the PR's copy."
-            rm -rf .base && mkdir .base && cp -r scripts .base/
-          fi
+          find scripts -type f | while read -r file; do
+            if [ ! -e ".base/$file" ]; then
+              echo "::warning::The base branch has no $file; using the PR's copy."
+              mkdir -p ".base/$(dirname "$file")" && cp "$file" ".base/$file"
+            fi
+          done
 
       - uses: actions/setup-node@v6
         with:
@@ -132,12 +134,14 @@ jobs:
           sparse-checkout: scripts
 
       # See the same step in the catalogue job.
-      - name: Fall back to the PR's scripts if the base branch has none
+      - name: Add checks the base branch does not have yet
         run: |
-          if [ ! -f .base/scripts/changed-apps.ts ]; then
-            echo "::warning::The base branch has no scripts/changed-apps.ts; using the PR's copy."
-            rm -rf .base && mkdir .base && cp -r scripts .base/
-          fi
+          find scripts -type f | while read -r file; do
+            if [ ! -e ".base/$file" ]; then
+              echo "::warning::The base branch has no $file; using the PR's copy."
+              mkdir -p ".base/$(dirname "$file")" && cp "$file" ".base/$file"
+            fi
+          done
 
       - uses: actions/setup-node@v6
         with:
@@ -182,12 +186,14 @@ jobs:
             gate
 
       # See the same step in the catalogue job.
-      - name: Fall back to the PR's checks if the base branch has none
+      - name: Add checks the base branch does not have yet
         run: |
-          if [ ! -f .base/scripts/preflight.ts ] || [ ! -d .base/gate ]; then
-            echo "::warning::The base branch has no scripts/preflight.ts or gate/; using the PR's copy."
-            rm -rf .base && mkdir .base && cp -r scripts gate .base/
-          fi
+          find scripts gate -type f | while read -r file; do
+            if [ ! -e ".base/$file" ]; then
+              echo "::warning::The base branch has no $file; using the PR's copy."
+              mkdir -p ".base/$(dirname "$file")" && cp "$file" ".base/$file"
+            fi
+          done
 
       - uses: actions/setup-node@v6
         with:
@@ -205,6 +211,12 @@ jobs:
 
       - name: Synthesise every variant and run the gate
         run: node .base/scripts/preflight.ts apps/${{ matrix.app }}
+
+      # Pinned, still published, and how far behind upstream (a warning, not a failure).
+      # Reads the images from the templates the step above synthesised.
+      - name: Check the container images
+        if: success() || failure()
+        run: node .base/scripts/check-images.ts apps/${{ matrix.app }}
 
   # One check to require in branch protection, whatever apps the matrix expands to.
   gate:
