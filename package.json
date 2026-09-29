@@ -14,7 +14,8 @@
     "catalogue": "node scripts/check-catalogue.ts",
     "lint": "biome check && tsc -p .",
     "lint:fix": "biome check --write",
-    "preflight": "node scripts/preflight.ts"
+    "preflight": "node scripts/preflight.ts",
+    "test": "node --test \"test/**/*.test.ts\""
   },
   "type": "module"
 }

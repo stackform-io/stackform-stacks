@@ -190,7 +190,8 @@ runs TypeScript directly:
 - **Lint** (`npm ci && npm run lint`): the repository is TypeScript only, and
   no JavaScript file may be committed. [Biome](https://biomejs.dev) lints and
   formats the TypeScript and JSON (`npm run lint:fix` applies its fixes), `tsc`
-  type-checks `scripts/` and `gate/` in strict mode, and
+  type-checks `scripts/`, `gate/` and `test/` in strict mode, `npm test` runs
+  the tests in [`test/`](test), and
   [actionlint](https://github.com/rhysd/actionlint) checks the workflows.
 - **Catalogue conventions** (`node scripts/check-catalogue.ts`): each app has
   the required files, a valid `tool.json`, and a row in the stacks table.
@@ -200,6 +201,14 @@ runs TypeScript directly:
   default settings always run as one variant. The gate checks for an `AppUrl`
   output, no public databases or tasks, encryption, no plaintext secrets, and
   IAM wildcards. The gate lives in [`gate/`](gate).
+  A PR into `develop` grades only the apps it changes, or every app when it
+  changes the gate, the scripts, the workflows or the root tooling. A PR into
+  `main` grades every app.
+- **Images** (`node scripts/check-images.ts apps/<slug>`, after the pre-flight
+  step): every container image in the synthesised templates is pinned to a tag
+  or digest, never `latest`, and the registry still publishes it, so a removed
+  upstream tag fails here instead of in a customer's deploy. A newer upstream
+  release is reported as a warning, not a failure.
 - **ClickUp task ID** (maintainers' PRs only): the title contains an `SF-<id>`
   that exists.
 

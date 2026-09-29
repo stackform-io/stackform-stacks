@@ -18,5 +18,5 @@
     "useUnknownInCatchVariables": true,
     "skipLibCheck": true
   },
-  "include": ["scripts/**/*.ts", "gate/**/*.ts"]
+  "include": ["scripts/**/*.ts", "gate/**/*.ts", "test/**/*.ts"]
 }

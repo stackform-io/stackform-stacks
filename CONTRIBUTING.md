@@ -177,7 +177,7 @@ particular:
 - A variant for every deploy-form choice that changes the resources or IAM,
   such as a custom domain, a tier or an opt-in integration. See
   [Checks](README.md#checks).
-- `node scripts/preflight.ts apps/<slug>` and `npm run lint` pass locally.
+- `node scripts/preflight.ts apps/<slug>`, `npm run lint` and `npm test` pass locally.
 
 ### Architecture and security
 
@@ -187,7 +187,8 @@ particular:
   passwords, keys or tokens in code, context or plain environment variables.
 - Storage and databases are encrypted at rest.
 - The upstream image is pinned to an exact version, never `latest`, in one
-  named constant (e.g. `UMAMI_VERSION`).
+  named constant (e.g. `UMAMI_VERSION`). CI checks the tag is pinned and still
+  published, and warns when a newer release is out.
 - HTTPS through ACM whenever `domainName` and `hostedZoneId` are set.
 - Databases keep a final snapshot on delete unless `destroyDataOnDelete` is on.
 - The stack deletes cleanly, with no orphaned resources left behind except
