@@ -190,7 +190,8 @@ runs TypeScript directly:
 - **Lint** (`npm ci && npm run lint`): the repository is TypeScript only, and
   no JavaScript file may be committed. [Biome](https://biomejs.dev) lints and
   formats the TypeScript and JSON (`npm run lint:fix` applies its fixes), `tsc`
-  type-checks `scripts/` and `gate/` in strict mode, and
+  type-checks `scripts/`, `gate/` and `test/` in strict mode, `npm test` runs
+  the tests in [`test/`](test), and
   [actionlint](https://github.com/rhysd/actionlint) checks the workflows.
 - **Catalogue conventions** (`node scripts/check-catalogue.ts`): each app has
   the required files, a valid `tool.json`, and a row in the stacks table.

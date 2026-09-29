@@ -68,8 +68,9 @@ jobs:
         run: node .base/scripts/check-catalogue.ts .
 
   # The repository is TypeScript only. Biome lints and formats the TypeScript and JSON
-  # (biome.json), tsc type-checks scripts/ and gate/ (tsconfig.json; each app has its
-  # own, checked in the pre-flight job), and actionlint checks the workflows.
+  # (biome.json), tsc type-checks scripts/, gate/ and test/ (tsconfig.json; each app has
+  # its own, checked in the pre-flight job), the tests run, and actionlint checks the
+  # workflows.
   lint:
     name: Lint
     runs-on: ubuntu-24.04
@@ -101,6 +102,11 @@ jobs:
 
       - name: Type-check
         run: npx tsc -p .
+
+      # Unit tests for scripts/ and gate/ (test/), on Node's built-in runner. Some query
+      # Docker Hub and GHCR; OFFLINE=1 skips those.
+      - name: Tests
+        run: npm test
 
       - name: actionlint
         run: |

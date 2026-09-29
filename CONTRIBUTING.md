@@ -177,7 +177,7 @@ particular:
 - A variant for every deploy-form choice that changes the resources or IAM,
   such as a custom domain, a tier or an opt-in integration. See
   [Checks](README.md#checks).
-- `node scripts/preflight.ts apps/<slug>` and `npm run lint` pass locally.
+- `node scripts/preflight.ts apps/<slug>`, `npm run lint` and `npm test` pass locally.
 
 ### Architecture and security
 
