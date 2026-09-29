@@ -60,7 +60,7 @@ button upstream. See "From develop to production" in CONTRIBUTING.md.
 ### Tested
 
 - [ ] `preflight.json` lists every variant that changes resources or IAM (tier, custom domain, and so on)
-- [ ] `node scripts/preflight.mjs apps/<slug>` passes locally
+- [ ] `node scripts/preflight.ts apps/<slug>` and `npm run lint` pass locally
 - [ ] Deployed to a real account; the app loads at `AppUrl` and first login works
 - [ ] Deleted cleanly, leaving only the expected snapshots
 

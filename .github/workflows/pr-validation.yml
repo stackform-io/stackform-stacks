@@ -17,12 +17,19 @@ concurrency:
   group: pr-validation-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
+# Every check runs the base branch's copy of scripts/ and gate/ against the PR's apps,
+# so a PR is graded by the rules it targets, not by rules it edits. Changes to those
+# rules (and to this file) need a code owner's review; see .github/CODEOWNERS.
+#
+# pull_request, never pull_request_target: a fork's code runs here, so this workflow
+# holds no secrets and needs none.
+
 env:
-  # The deploy engine runs on Node 22 (node:22-slim), so synth runs on it here too.
+  # The deploy engine runs on Node 22 (node:22-slim), so synth runs on it here too. The
+  # scripts and the gate are TypeScript run by Node's type stripping, which needs 22.18+.
   NODE_VERSION: "22"
-  # Same versions stackform-cdk pins, so the gate and the synth match the platform's.
+  # Pinned to the versions the deploy engine uses, so the gate and the synth match it.
   CDK_CLI_VERSION: "2.1143.0"
-  TSX_VERSION: "4.23.15"
 
 jobs:
   # Cheap checks that need no install: required files, tool.json shape, README table.
@@ -34,12 +41,71 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
+      - name: Check out the checks from the base branch
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .base
+          sparse-checkout: scripts
+
+      # Only while a base branch predates these checks (the PR that adds them, and the
+      # first promotion to main). A PR cannot remove them from its base, so once they
+      # land this never runs again.
+      - name: Fall back to the PR's checks if the base branch has none
+        run: |
+          if [ ! -f .base/scripts/check-catalogue.ts ]; then
+            echo "::warning::The base branch has no scripts/check-catalogue.ts; using the PR's copy."
+            rm -rf .base && mkdir .base && cp -r scripts .base/
+          fi
+
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Check every app against the conventions
-        run: node scripts/check-catalogue.mjs
+        run: node .base/scripts/check-catalogue.ts .
+
+  # The repository is TypeScript only. Biome lints and formats the TypeScript and JSON
+  # (biome.json), tsc type-checks scripts/ and gate/ (tsconfig.json; each app has its
+  # own, checked in the pre-flight job), and actionlint checks the workflows.
+  lint:
+    name: Lint
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: No JavaScript
+        run: |
+          js=$(git ls-files '*.js' '*.mjs' '*.cjs' '*.jsx')
+          if [ -n "$js" ]; then
+            echo "::error::This repository is TypeScript only. Convert these files:"
+            echo "$js"
+            exit 1
+          fi
+
+      - name: Install tooling
+        run: npm ci
+
+      - name: Biome
+        run: npx biome ci --reporter=github
+
+      - name: Type-check
+        run: npx tsc -p .
+
+      - name: actionlint
+        run: |
+          bash <(curl -sSfL "https://raw.githubusercontent.com/rhysd/actionlint/v${ACTIONLINT_VERSION}/scripts/download-actionlint.bash") "$ACTIONLINT_VERSION"
+          ./actionlint -color
+        env:
+          ACTIONLINT_VERSION: "1.7.12"
 
   discover:
     name: Discover Apps
@@ -52,16 +118,12 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
 
       - id: apps
-        run: echo "apps=$(ls -d apps/*/ | xargs -n1 basename | jq -R . | jq -cs .)" >> "$GITHUB_OUTPUT"
+        run: echo "apps=$(find apps -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort | jq -R . | jq -cs .)" >> "$GITHUB_OUTPUT"
 
   # The SF-441 pre-flight gate over every deploy-form variant of every app.
   #
-  # Every app, on every PR, not only the changed ones: the gate is fetched from
-  # stackform-cdk, so it can tighten without a change here, and a stack that stopped
-  # passing should say so on the next PR rather than on its next edit.
-  #
-  # The gate is checked out from stackform-cdk rather than copied here, so there is one
-  # gate. Only its CLI and lib/verification are fetched; both use Node built-ins only.
+  # Every app, on every PR, not only the changed ones: when gate/ tightens, a stack that
+  # stopped passing should say so on the next PR rather than on its next edit.
   preflight:
     name: Pre-flight (${{ matrix.app }})
     needs: discover
@@ -76,17 +138,22 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Check out the pre-flight gate
+      - name: Check out the gate from the base branch
         uses: actions/checkout@v6
         with:
-          repository: stackform-io/stackform-cdk
-          ref: ${{ vars.GATE_REF || 'develop' }}
-          token: ${{ secrets.GH_PAT }}
-          path: .stackform-cdk
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .base
           sparse-checkout: |
-            scripts/preflight-gate.ts
-            lib/verification
-          sparse-checkout-cone-mode: false
+            scripts
+            gate
+
+      # See the same step in the catalogue job.
+      - name: Fall back to the PR's checks if the base branch has none
+        run: |
+          if [ ! -f .base/scripts/preflight.ts ] || [ ! -d .base/gate ]; then
+            echo "::warning::The base branch has no scripts/preflight.ts or gate/; using the PR's copy."
+            rm -rf .base && mkdir .base && cp -r scripts gate .base/
+          fi
 
       - uses: actions/setup-node@v6
         with:
@@ -103,9 +170,7 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Synthesise every variant and run the gate
-        env:
-          STACKFORM_CDK_DIR: ${{ github.workspace }}/.stackform-cdk
-        run: node scripts/preflight.mjs apps/${{ matrix.app }}
+        run: node .base/scripts/preflight.ts apps/${{ matrix.app }}
 
   # One check to require in branch protection, whatever apps the matrix expands to.
   gate:
@@ -113,6 +178,7 @@ jobs:
     if: always()
     needs:
       - catalogue
+      - lint
       - discover
       - preflight
     runs-on: ubuntu-24.04

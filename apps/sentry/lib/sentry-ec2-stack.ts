@@ -2,7 +2,7 @@ import * as cdk from "aws-cdk-lib";
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as route53 from "aws-cdk-lib/aws-route53";
-import { Construct } from "constructs";
+import type { Construct } from "constructs";
 
 // Pinned Sentry self-hosted release
 const SENTRY_RELEASE = "24.11.1";
@@ -133,6 +133,7 @@ export class SentryEc2Stack extends cdk.Stack {
           "dnf install -y caddy 2>/dev/null || {",
           "  # Fallback: install from GitHub release",
           '  CADDY_VERSION="v2.8.4"',
+          // biome-ignore lint/suspicious/noTemplateCurlyInString: bash variables, expanded on the instance
           '  curl -sL "https://github.com/caddyserver/caddy/releases/download/${CADDY_VERSION}/caddy_${CADDY_VERSION#v}_linux_amd64.tar.gz" | tar xz -C /usr/bin caddy',
           "  useradd --system --home /var/lib/caddy --shell /usr/sbin/nologin caddy || true",
           "}",
@@ -173,6 +174,7 @@ export class SentryEc2Stack extends cdk.Stack {
       "# Install Docker Compose v2",
       'DOCKER_COMPOSE_VERSION="v2.32.1"',
       "mkdir -p /usr/local/lib/docker/cli-plugins",
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: bash variable, expanded on the instance
       'curl -SL "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-linux-x86_64" -o /usr/local/lib/docker/cli-plugins/docker-compose',
       "chmod +x /usr/local/lib/docker/cli-plugins/docker-compose",
       "",

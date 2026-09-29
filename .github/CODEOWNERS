@@ -1,0 +1,17 @@
+# The rules every PR is graded by: the pre-flight gate, the check scripts and the
+# workflows that run them. CI runs the base branch's copy of these, so an app's PR
+# cannot relax its own checks; this file makes sure a change to the rules themselves
+# is reviewed by a maintainer before it lands.
+#
+# Only enforced with "Require review from Code Owners" on the develop and main
+# branch rules.
+
+/gate/          @ahansson89 @oauramos @alberto-ah2
+/scripts/       @ahansson89 @oauramos @alberto-ah2
+/.github/       @ahansson89 @oauramos @alberto-ah2
+
+# Lint, type-check and tooling configuration.
+/biome.json         @ahansson89 @oauramos @alberto-ah2
+/tsconfig.json      @ahansson89 @oauramos @alberto-ah2
+/package.json       @ahansson89 @oauramos @alberto-ah2
+/package-lock.json  @ahansson89 @oauramos @alberto-ah2
