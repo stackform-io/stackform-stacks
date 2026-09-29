@@ -1,0 +1,127 @@
+name: Develop/Main PR Validation
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-validation-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  # The deploy engine runs on Node 22 (node:22-slim), so synth runs on it here too.
+  NODE_VERSION: "22"
+  # Same versions stackform-cdk pins, so the gate and the synth match the platform's.
+  CDK_CLI_VERSION: "2.1143.0"
+  TSX_VERSION: "4.23.15"
+
+jobs:
+  # Cheap checks that need no install: required files, tool.json shape, README table.
+  catalogue:
+    name: Catalogue Conventions
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Check every app against the conventions
+        run: node scripts/check-catalogue.mjs
+
+  discover:
+    name: Discover Apps
+    runs-on: ubuntu-24.04
+    outputs:
+      apps: ${{ steps.apps.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - id: apps
+        run: echo "apps=$(ls -d apps/*/ | xargs -n1 basename | jq -R . | jq -cs .)" >> "$GITHUB_OUTPUT"
+
+  # The SF-441 pre-flight gate over every deploy-form variant of every app.
+  #
+  # Every app, on every PR, not only the changed ones: the gate is fetched from
+  # stackform-cdk, so it can tighten without a change here, and a stack that stopped
+  # passing should say so on the next PR rather than on its next edit.
+  #
+  # The gate is checked out from stackform-cdk rather than copied here, so there is one
+  # gate. Only its CLI and lib/verification are fetched; both use Node built-ins only.
+  preflight:
+    name: Pre-flight (${{ matrix.app }})
+    needs: discover
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.discover.outputs.apps) }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Check out the pre-flight gate
+        uses: actions/checkout@v6
+        with:
+          repository: stackform-io/stackform-cdk
+          ref: ${{ vars.GATE_REF || 'develop' }}
+          token: ${{ secrets.GH_PAT }}
+          path: .stackform-cdk
+          sparse-checkout: |
+            scripts/preflight-gate.ts
+            lib/verification
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: apps/${{ matrix.app }}/package-lock.json
+
+      - name: Install dependencies
+        working-directory: apps/${{ matrix.app }}
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: apps/${{ matrix.app }}
+        run: npx tsc --noEmit
+
+      - name: Synthesise every variant and run the gate
+        env:
+          STACKFORM_CDK_DIR: ${{ github.workspace }}/.stackform-cdk
+        run: node scripts/preflight.mjs apps/${{ matrix.app }}
+
+  # One check to require in branch protection, whatever apps the matrix expands to.
+  gate:
+    name: Pre-flight Gate
+    if: always()
+    needs:
+      - catalogue
+      - discover
+      - preflight
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Every job passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Results: $RESULTS"
+          for result in $RESULTS; do
+            [ "$result" = "success" ] || { echo "::error::A validation job did not pass ($result)."; exit 1; }
+          done

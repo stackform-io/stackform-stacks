@@ -1,0 +1,11 @@
+{
+  "variants": {
+    "starter-private-errors-only": { "tier": "starter", "subnetType": "private", "sentryProfile": "errors-only" },
+    "starter-public-full": { "tier": "starter", "subnetType": "public", "sentryProfile": "full" },
+    "starter-private-full": { "tier": "starter", "subnetType": "private", "sentryProfile": "full" },
+    "optimized-private-errors-only": { "tier": "optimized", "subnetType": "private", "sentryProfile": "errors-only" },
+    "optimized-public-errors-only": { "tier": "optimized", "subnetType": "public", "sentryProfile": "errors-only" },
+    "optimized-private-full": { "tier": "optimized", "subnetType": "private", "sentryProfile": "full" },
+    "optimized-public-full": { "tier": "optimized", "subnetType": "public", "sentryProfile": "full" }
+  }
+}

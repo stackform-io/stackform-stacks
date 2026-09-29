@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "https": { "domainName": "llm.example.com", "hostedZoneId": "Z123456" },
+    "bedrock": { "bedrockAccess": true }
+  }
+}

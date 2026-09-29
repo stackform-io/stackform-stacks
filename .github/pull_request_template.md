@@ -31,8 +31,8 @@ downtime? Write "None" if nothing changes.
 ## Checklist
 
 - [ ] `version` in `package.json` bumped with `npm version` (see [Versioning](../CONTRIBUTING.md#versioning))
-- [ ] `npx cdk synth` passes with no context (defaults)
-- [ ] `npx cdk synth` passes with the new or changed values
+- [ ] `preflight.json` has a variant for any new option that changes resources or IAM
+- [ ] `node scripts/preflight.mjs apps/<slug>` passes locally
 - [ ] `tool.json` updated if form fields, cost or duration changed
 - [ ] Entry point validates any new `toolConfig` value
 - [ ] App `README.md` updated (configuration table, cost, upgrade notes)

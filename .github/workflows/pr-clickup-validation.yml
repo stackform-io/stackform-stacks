@@ -1,0 +1,33 @@
+name: PR ClickUp Validation
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  validate-clickup-task:
+    name: Validate ClickUp Task ID
+    runs-on: ubuntu-24.04
+
+    # Skip for bots, for PRs labelled skip-clickup, and for PRs from forks: outside
+    # contributors have no ClickUp task, and a fork's PR gets no secrets to check one with.
+    if: >-
+      github.actor != 'dependabot[bot]' &&
+      github.actor != 'github-actions[bot]' &&
+      !contains(github.event.pull_request.labels.*.name, 'skip-clickup') &&
+      !github.event.pull_request.head.repo.fork
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Validate PR title has ClickUp task ID
+        env:
+          CLICKUP_API_TOKEN: ${{ secrets.CLICKUP_API_TOKEN }}
+          CLICKUP_TEAM_ID: ${{ vars.CLICKUP_TEAM_ID }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: ./scripts/validate-pr-clickup.sh "$PR_TITLE"

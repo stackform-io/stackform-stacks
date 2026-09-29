@@ -16,3 +16,6 @@ npm-debug.log*
 
 # OS
 .DS_Store
+
+# Pre-flight gate checkout (CI)
+.stackform-cdk/

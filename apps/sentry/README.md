@@ -4,7 +4,7 @@ Self-hosted Sentry error tracking deployed to your AWS account. Choose between t
 
 ## Quick Deploy
 
-[![Deploy with Stackform](https://dev.stackform.io/buttons/deploy-to-stackform.svg)](https://dev.stackform.io/start/deploy?template=sentry)
+[![Deploy to Stackform](../../assets/buttons/deploy-to-stackform.svg)](https://dev.stackform.io/start/deploy?template=sentry)
 
 ## Deployment Tiers
 

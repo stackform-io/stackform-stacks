@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "https": { "domainName": "prefect.example.com", "hostedZoneId": "Z123456" }
+  }
+}

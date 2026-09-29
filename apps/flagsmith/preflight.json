@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "https": { "domainName": "flags.example.com", "hostedZoneId": "Z123456" }
+  }
+}

@@ -28,7 +28,7 @@ button upstream. See "From develop to production" in CONTRIBUTING.md.
 
 ### Files
 
-- [ ] `apps/<slug>/` has `tool.json`, `README.md`, `bin/<slug>.ts`, `bin/prm-attribution.ts`, `lib/`, `cdk.json`, `package.json`, `package-lock.json`, `tsconfig.json`
+- [ ] `apps/<slug>/` has `tool.json`, `preflight.json`, `README.md`, `bin/<slug>.ts`, `bin/prm-attribution.ts`, `lib/`, `cdk.json`, `package.json`, `package-lock.json`, `tsconfig.json`
 - [ ] `package.json` starts at version `1.0.0`, and pins `aws-cdk-lib` to the same version as the other stacks
 
 ### Stack definition (`tool.json`)
@@ -59,8 +59,8 @@ button upstream. See "From develop to production" in CONTRIBUTING.md.
 
 ### Tested
 
-- [ ] `npx cdk synth` passes with no context
-- [ ] `npx cdk synth` passes with non-default values (tier, custom domain, and so on)
+- [ ] `preflight.json` lists every variant that changes resources or IAM (tier, custom domain, and so on)
+- [ ] `node scripts/preflight.mjs apps/<slug>` passes locally
 - [ ] Deployed to a real account; the app loads at `AppUrl` and first login works
 - [ ] Deleted cleanly, leaving only the expected snapshots
 

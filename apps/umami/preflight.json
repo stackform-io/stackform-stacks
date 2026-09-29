@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "https": { "domainName": "analytics.example.com", "hostedZoneId": "Z123456" }
+  }
+}
