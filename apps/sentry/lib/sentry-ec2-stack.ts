@@ -275,11 +275,12 @@ export class SentryEc2Stack extends cdk.Stack {
     });
     waitCondition.addDependency(this.instance.node.defaultChild as cdk.CfnResource);
 
-    // Signal CloudFormation on completion (always runs, uses tracked exit code)
-    this.instance.addUserData(
-      `# Signal CloudFormation`,
-      `cfn-signal -e $INSTALL_EXIT_CODE --stack ${this.stackName} --resource ${waitCondition.logicalId} --region ${this.region} '${waitHandle.ref}'`,
-    );
+    // Signal CloudFormation on completion (always runs, uses tracked exit code). The
+    // handle URL alone: it already names the stack and the wait condition, and cfn-signal
+    // refuses it together with --stack/--resource ("Cannot specify both a
+    // WaitConditionHandle URL and a logical resource id"), which left the wait condition
+    // unsignalled and rolled back a healthy install at the 40-minute timeout.
+    this.instance.addUserData(`# Signal CloudFormation`, `cfn-signal -e $INSTALL_EXIT_CODE '${waitHandle.ref}'`);
 
     // ========================================
     // Elastic IP (public subnet only)
