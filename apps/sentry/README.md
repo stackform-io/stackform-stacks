@@ -72,7 +72,7 @@ docker compose run --rm web createuser --superuser --email admin@example.com
 
 ### 3. Access Web Interface
 
-- **Without custom domain**: `http://<ELASTIC_IP>:9000`
+- **Without custom domain**: `http://<ELASTIC_IP>` (port 80, through the Caddy proxy; port 9000 is not open)
 - **With custom domain**: `https://your-domain.com`
 
 ### 4. Upgrading
@@ -144,7 +144,7 @@ VPC (new or existing)
        │    ├─ Web, Worker, Cron services
        │    ├─ PostgreSQL, Redis, Kafka, ClickHouse
        │    └─ Symbolicator, Relay, Snuba
-       ├─ Caddy reverse proxy (if custom domain)
+       ├─ Caddy reverse proxy (HTTPS with a custom domain, HTTP on port 80 without)
        ├─ EBS GP3 volume (encrypted)
        ├─ Security Group (80/443)
        └─ IAM Role (SSM + SSM Parameter Store)
