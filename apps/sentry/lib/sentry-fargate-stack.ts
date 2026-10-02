@@ -228,9 +228,10 @@ export class SentryFargateStack extends cdk.Stack {
     const dbHost = dbInstance.dbInstanceEndpointAddress;
     const dbPort = dbInstance.dbInstanceEndpointPort;
 
-    // Build shared env vars for all Sentry services
+    // Build shared env vars for all Sentry services. SENTRY_SECRET_KEY is not here: each
+    // container gets it as a secret, and ECS rejects a task definition that sets one name
+    // as both an environment variable and a secret.
     const sharedEnv: Record<string, string> = {
-      SENTRY_SECRET_KEY: "", // Will be overridden by secret
       SENTRY_POSTGRES_HOST: dbHost,
       SENTRY_POSTGRES_PORT: dbPort,
       SENTRY_DB_NAME: "sentry",
