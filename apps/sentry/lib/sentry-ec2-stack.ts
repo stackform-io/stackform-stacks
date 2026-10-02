@@ -124,34 +124,68 @@ export class SentryEc2Stack extends cdk.Stack {
       envOverrideLines.push("");
     }
 
-    // Caddy reverse proxy setup (only when domain is provided for automatic HTTPS)
-    const caddySetup = domainName
-      ? [
-          "# Install Caddy reverse proxy for automatic HTTPS via Let's Encrypt",
-          "dnf install -y 'dnf-command(copr)' || true",
-          "dnf copr enable -y @caddy/caddy epel-9-x86_64 2>/dev/null || true",
-          "dnf install -y caddy 2>/dev/null || {",
-          "  # Fallback: install from GitHub release",
-          '  CADDY_VERSION="v2.8.4"',
-          // biome-ignore lint/suspicious/noTemplateCurlyInString: bash variables, expanded on the instance
-          '  curl -sL "https://github.com/caddyserver/caddy/releases/download/${CADDY_VERSION}/caddy_${CADDY_VERSION#v}_linux_amd64.tar.gz" | tar xz -C /usr/bin caddy',
-          "  useradd --system --home /var/lib/caddy --shell /usr/sbin/nologin caddy || true",
-          "}",
-          "",
-          "# Configure Caddy as reverse proxy to Sentry",
-          "mkdir -p /etc/caddy",
-          `cat > /etc/caddy/Caddyfile << 'CADDYEOF'`,
-          `${domainName} {`,
-          "  reverse_proxy localhost:9000",
-          "}",
-          "CADDYEOF",
-          "",
-          "# Start Caddy (auto-provisions Let's Encrypt certificate)",
-          "systemctl enable caddy",
-          "systemctl start caddy",
-          "",
-        ]
-      : [];
+    // Caddy reverse proxy, always. Sentry listens on port 9000, which the security group
+    // does not open: 80 and 443 are the only ways in. With a domain Caddy serves it over
+    // HTTPS with a Let's Encrypt certificate; without one it serves plain HTTP on port
+    // 80. It used to be installed only with a domain, which left a deploy without one
+    // publishing an `AppUrl` on :9000 that nothing could reach.
+    //
+    // The pinned release binary with a unit of our own, so there is one install path and
+    // it does not depend on a package repository carrying Caddy for this OS.
+    const caddySetup = [
+      "# Install the Caddy reverse proxy",
+      'CADDY_VERSION="v2.8.4"',
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: bash variables, expanded on the instance
+      'curl -fsSL "https://github.com/caddyserver/caddy/releases/download/${CADDY_VERSION}/caddy_${CADDY_VERSION#v}_linux_amd64.tar.gz" | tar xz -C /usr/bin caddy',
+      "useradd --system --user-group --create-home --home-dir /var/lib/caddy --shell /usr/sbin/nologin caddy || true",
+      "",
+      "# Configure Caddy as reverse proxy to Sentry",
+      "mkdir -p /etc/caddy",
+      `cat > /etc/caddy/Caddyfile << 'CADDYEOF'`,
+      `${domainName ?? ":80"} {`,
+      "  reverse_proxy localhost:9000",
+      "}",
+      "CADDYEOF",
+      "",
+      `cat > /etc/systemd/system/caddy.service << 'UNITEOF'`,
+      "[Unit]",
+      "Description=Caddy reverse proxy for Sentry",
+      "After=network-online.target",
+      "Wants=network-online.target",
+      "",
+      "[Service]",
+      "Type=notify",
+      "User=caddy",
+      "Group=caddy",
+      "ExecStart=/usr/bin/caddy run --environ --config /etc/caddy/Caddyfile",
+      "ExecReload=/usr/bin/caddy reload --config /etc/caddy/Caddyfile --force",
+      "Restart=on-failure",
+      "TimeoutStopSec=5s",
+      "LimitNOFILE=1048576",
+      "AmbientCapabilities=CAP_NET_BIND_SERVICE",
+      "",
+      "[Install]",
+      "WantedBy=multi-user.target",
+      "UNITEOF",
+      "",
+      "# Start Caddy (with a domain, it provisions the Let's Encrypt certificate)",
+      "systemctl daemon-reload",
+      "systemctl enable --now caddy",
+      "",
+      "# The proxy is the only way in, so an install whose proxy is not serving has failed",
+      "if ! systemctl is-active --quiet caddy; then",
+      '  echo "ERROR: Caddy is not running"',
+      "  INSTALL_EXIT_CODE=1",
+      ...(domainName
+        ? []
+        : [
+            'elif [ "$INSTALL_EXIT_CODE" -eq 0 ] && ! curl -sf --retry 5 --retry-delay 3 --retry-all-errors http://localhost/_health/ > /dev/null; then',
+            '  echo "ERROR: Sentry does not answer through the proxy on port 80"',
+            "  INSTALL_EXIT_CODE=1",
+          ]),
+      "fi",
+      "",
+    ];
 
     userData.addCommands(
       "#!/bin/bash",
@@ -294,14 +328,15 @@ export class SentryEc2Stack extends cdk.Stack {
         allocationId: eip.attrAllocationId,
       });
 
-      sentryUrl = domainName ? `https://${domainName}` : `http://${eip.attrPublicIp}:9000`;
+      // Port 80, through Caddy: the security group does not open Sentry's own port.
+      sentryUrl = domainName ? `https://${domainName}` : `http://${eip.attrPublicIp}`;
 
       new cdk.CfnOutput(this, "ElasticIP", {
         value: eip.attrPublicIp,
         description: "Elastic IP address",
       });
     } else {
-      sentryUrl = `http://${this.instance.instancePrivateIp}:9000`;
+      sentryUrl = `http://${this.instance.instancePrivateIp}`;
     }
 
     // ========================================
